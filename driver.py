@@ -1,68 +1,83 @@
+# Note: 
+# You can either use gym (not maintained anymore) or gymnasium (maintained version of gym)    
+     
+# tested on     
+# gym==0.26.2
+# gym-notices==0.0.8
+ 
+#gymnasium==0.27.0
+#gymnasium-notices==0.0.1
+ 
+# classical gym 
 import gym
+# instead of gym, import gymnasium 
+# import gymnasium as gym
 import numpy as np
-import matplotlib.pyplot as plt
-
+import time
+import matplotlib.pyplot as plt 
+ 
+# import the class that implements the Q-Learning algorithm
 from q_learning2 import Q_Learning
-
-env = gym.make('CartPole-v1')
-(state, _) = env.reset()
-
-upperBounds = env.observation_space.high
-lowerBounds = env.observation_space.low
-cartVelocityMin = -3
-cartVelocityMax = 3
-poleAngleVelocityMin = -10
-poleAngleVelocityMax = 10
-upperBounds[1] = cartVelocityMax
-upperBounds[3] = poleAngleVelocityMax
-lowerBounds[1] = cartVelocityMin
-lowerBounds[3] = poleAngleVelocityMin
-
-numberOfBinsPosition = 30
-numberOfBinsVelocity = 30
-numberOfBinsAngle = 30
-numberOfBinsAngleVelocity = 30
-numberOfBins = [numberOfBinsPosition, numberOfBinsVelocity, numberOfBinsAngle, numberOfBinsAngleVelocity]
-
-
-#EXPERIMIENTACION
-alpha = 0.1
-gamma = 0.9
-epsilon = 0.2
-numberEpisodes = 9000
-solve_threshold = 195  # Define the threshold for considering the problem solved
-
-Q1 = Q_Learning(env, alpha, gamma, epsilon, numberEpisodes, numberOfBins, lowerBounds, upperBounds, solve_threshold)
+ 
+#env=gym.make('CartPole-v1',render_mode='human')
+env=gym.make('CartPole-v1')
+(state,_)=env.reset()
+#env.render()
+#env.close()
+ 
+# here define the parameters for state discretization
+upperBounds=env.observation_space.high
+lowerBounds=env.observation_space.low
+cartVelocityMin=-3
+cartVelocityMax=3
+poleAngleVelocityMin=-10
+poleAngleVelocityMax=10
+upperBounds[1]=cartVelocityMax
+upperBounds[3]=poleAngleVelocityMax
+lowerBounds[1]=cartVelocityMin
+lowerBounds[3]=poleAngleVelocityMin
+ 
+numberOfBinsPosition=30
+numberOfBinsVelocity=30
+numberOfBinsAngle=30
+numberOfBinsAngleVelocity=30
+numberOfBins=[numberOfBinsPosition,numberOfBinsVelocity,numberOfBinsAngle,numberOfBinsAngleVelocity]
+ 
+# define the parameters
+alpha=0.1
+gamma=0.999
+epsilon=0.1
+numberEpisodes=10000
+ 
+# create an object
+Q1=Q_Learning(env,alpha,gamma,epsilon,numberEpisodes,numberOfBins,lowerBounds,upperBounds)
+# run the Q-Learning algorithm
 Q1.simulateEpisodes()
-
+# simulate the learned strategy
+(obtainedRewardsOptimal,env1)=Q1.simulateLearnedStrategy()
+ 
 plt.figure(figsize=(12, 5))
-plt.plot(Q1.sumRewardsEpisode, color='blue', linewidth=1)
+# plot the figure and adjust the plot parameters
+plt.plot(Q1.sumRewardsEpisode,color='blue',linewidth=1)
 plt.xlabel('Episode')
 plt.ylabel('Reward')
 plt.yscale('log')
-plt.title('Sum of Rewards per Episode')
 plt.show()
 plt.savefig('convergence.png')
-
-window_size = 100
-moving_avg = Q1.moving_average(Q1.sumRewardsEpisode, window_size)
-
-plt.figure(figsize=(12, 5))
-plt.plot(moving_avg, color='blue', linewidth=1)
-plt.xlabel('Episode')
-plt.ylabel('Average Duration (Last 100 Episodes)')
-plt.title('Average Duration over 100 Consecutive Episodes')
-plt.show()
-plt.savefig('average_duration.png')
-
-(obtainedRewardsOptimal, env1) = Q1.simulateLearnedStrategy()
+ 
+ 
+# close the environment
 env1.close()
-
-(obtainedRewardsRandom, env2) = Q1.simulateRandomStrategy()
-plt.hist(obtainedRewardsRandom, bins=20)
+# get the sum of rewards
+np.sum(obtainedRewardsOptimal)
+ 
+# now simulate a random strategy
+(obtainedRewardsRandom,env2)=Q1.simulateRandomStrategy()
+plt.hist(obtainedRewardsRandom)
 plt.xlabel('Sum of rewards')
 plt.ylabel('Percentage')
-plt.title('Histogram of Rewards for Random Strategy')
 plt.savefig('histogram.png')
 plt.show()
-env2.close()
+ 
+# run this several times and compare with a random learning strategy
+(obtainedRewardsOptimal,env1)=Q1.simulateLearnedStrategy()
